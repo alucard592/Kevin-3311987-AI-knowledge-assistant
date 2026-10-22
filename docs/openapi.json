@@ -1,0 +1,240 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Knowledge Assistant",
+    "version": "0.0.1",
+    "description": "API educativa de IA con Express, TypeScript, MOCK y OpenRouter."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3000",
+      "description": "Servidor local del laboratorio"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Estado de la aplicación"
+    },
+    {
+      "name": "Assistant",
+      "description": "Consultas al asistente de IA"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Consultar estado de la API",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "API disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ask": {
+      "post": {
+        "tags": ["Assistant"],
+        "summary": "Enviar una pregunta al asistente",
+        "description": "Genera una respuesta en modo MOCK u OpenRouter.",
+        "operationId": "askAssistant",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              },
+              "example": {
+                "question": "¿Qué es una API REST?"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta del asistente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Cuerpo HTTP demasiado grande",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Proveedor remoto no disponible o modelo gratuito no verificado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "mode"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok"]
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["mock", "openrouter"]
+          }
+        }
+      },
+      "AskRequest": {
+        "type": "object",
+        "required": ["question"],
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 1000,
+            "description": "Pregunta del usuario"
+          }
+        }
+      },
+      "Usage": {
+        "type": "object",
+        "required": [
+          "promptTokens",
+          "completionTokens"
+        ],
+        "properties": {
+          "promptTokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completionTokens": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "AskResult": {
+        "type": "object",
+        "required": [
+          "answer",
+          "mode",
+          "model",
+          "usage"
+        ],
+        "properties": {
+          "answer": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["mock", "openrouter"]
+          },
+          "model": {
+            "type": "string"
+          },
+          "usage": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Usage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "AskResponse": {
+        "type": "object",
+        "required": ["data", "meta"],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AskResult"
+          },
+          "meta": {
+            "type": "object",
+            "required": ["requestId"],
+            "properties": {
+              "requestId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message",
+              "requestId"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
