@@ -1,0 +1,256 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AI Knowledge Assistant - Module II",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/api/v1/extract": {
+      "post": {
+        "tags": ["Structured Extraction"],
+        "summary": "Extraer una actividad académica",
+        "description": "Utiliza OpenRouter y valida el JSON generado mediante Zod.",
+        "operationId": "extractAcademicActivity",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRequest"
+              },
+              "example": {
+                "text": "Desarrollar una API REST con Express y TypeScript. Dificultad media. Duración estimada: 5 horas.",
+                "mode": "structured"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Extracción completada y validada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ExtractBadRequest"
+          },
+          "422": {
+            "$ref": "#/components/responses/ExtractUnprocessable"
+          },
+          "502": {
+            "$ref": "#/components/responses/ExtractBadGateway"
+          },
+          "503": {
+            "$ref": "#/components/responses/ExtractUnavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/ExtractTimeout"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ExtractRequest": {
+        "type": "object",
+        "required": ["text"],
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 2500
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["json_mode", "structured"],
+            "default": "structured"
+          },
+          "model": {
+            "type": "string",
+            "description": "ID de un modelo gratuito compatible"
+          }
+        }
+      },
+      "ExtractedActivity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "summary",
+          "topics",
+          "difficulty",
+          "estimatedHours",
+          "deadline"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 450
+          },
+          "topics": {
+            "type": "array",
+            "maxItems": 12,
+            "items": {
+              "type": "string"
+            }
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "baja",
+              "media",
+              "alta",
+              "no_especificada"
+            ]
+          },
+          "estimatedHours": {
+            "type": "number",
+            "nullable": true
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      },
+      "ExtractUsage": {
+        "type": "object",
+        "required": [
+          "promptTokens",
+          "completionTokens",
+          "totalTokens"
+        ],
+        "properties": {
+          "promptTokens": {
+            "type": "integer",
+            "nullable": true
+          },
+          "completionTokens": {
+            "type": "integer",
+            "nullable": true
+          },
+          "totalTokens": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "ExtractResponse": {
+        "type": "object",
+        "required": [
+          "model",
+          "mode",
+          "data",
+          "usage"
+        ],
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["json_mode", "structured"]
+          },
+          "data": {
+            "$ref": "#/components/schemas/ExtractedActivity"
+          },
+          "usage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExtractUsage"
+              }
+            ],
+            "nullable": true
+          }
+        }
+      },
+      "ExtractError": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "ExtractBadRequest": {
+        "description": "Error de validación de entrada",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExtractError"
+            }
+          }
+        }
+      },
+      "ExtractUnprocessable": {
+        "description": "Modelo no disponible o incompatible",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExtractError"
+            }
+          }
+        }
+      },
+      "ExtractBadGateway": {
+        "description": "Respuesta inválida del proveedor",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExtractError"
+            }
+          }
+        }
+      },
+      "ExtractUnavailable": {
+        "description": "Proveedor o configuración no disponible",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExtractError"
+            }
+          }
+        }
+      },
+      "ExtractTimeout": {
+        "description": "Tiempo de espera agotado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExtractError"
+            }
+          }
+        }
+      }
+    }
+  }
+}

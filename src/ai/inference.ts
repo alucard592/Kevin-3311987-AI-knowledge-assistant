@@ -7,7 +7,7 @@ import type { InferenceResult } from '../contracts/ask.js';
 
 import { ApiError } from '../errors/api-error.js';
 
-import { inferWithOpenRouter } from './openrouter.js';
+import { inferWithOpenRouter } from './openRouter.js';
 
 const fixtureSchema = z.object({
   answer: z.string().min(1),
